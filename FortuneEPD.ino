@@ -1,8 +1,7 @@
 /**
-   BasicHTTPClient.ino
-
-    Created on: 24.05.2015
-
+   FortuneEPD.ino
+    By: Livio Rossani
+    Created on: 24.03.2021
 */
 
 #include <Arduino.h>
@@ -11,31 +10,25 @@
 #include <HTTPClient.h>
 #include "epd_driver.h"
 #include "opensans18b.h"
-
+#include "secrets.h"
 #define USE_SERIAL Serial
 
 WiFiMulti wifiMulti;
-const char* WIFI_SSID = "Senzafibre";
-const char* WIFI_PWD = "gatt0kak0ne";
 char* URL = "http://fotoni.it/cgi-bin/fortune.cgi";
 
-GFXfont currentFont;
-enum alignment {LEFT, RIGHT, CENTER};
+GFXfont currentFont = OpenSans18B;
 uint8_t *framebuffer;
 int cursor_x = 8;
 int cursor_y = 4;
-char pageBuffer[0xffff];
 
-void setFont(GFXfont const & font) {
-  currentFont = font;
-}
+// Page text length limited to 64k
+char pageBuffer[0xffff];
 
 void InitialiseDisplay() {
   epd_init();
   framebuffer = (uint8_t *)ps_calloc(sizeof(uint8_t), EPD_WIDTH * EPD_HEIGHT / 2);
   if (!framebuffer) Serial.println("Memory alloc failed!");
   memset(framebuffer, 0xFF, EPD_WIDTH * EPD_HEIGHT / 2);
-  setFont(OpenSans18B);
 }
 
 void setup() {
@@ -49,7 +42,7 @@ void setup() {
     USE_SERIAL.flush();
     delay(200);
   }
-
+// #define your WiFi SSID and password in "secrets.h" file
   wifiMulti.addAP(WIFI_SSID, WIFI_PWD);
   InitialiseDisplay();
 }
@@ -58,9 +51,7 @@ String getPage() {
   String payload;
   // wait for WiFi connection
   if ((wifiMulti.run() == WL_CONNECTED)) {
-
     HTTPClient http;
-
     USE_SERIAL.print("[HTTP] begin...\n");
     // configure traged server and url
     http.begin(URL); //HTTP
